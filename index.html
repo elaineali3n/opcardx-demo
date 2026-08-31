@@ -140,9 +140,10 @@ body.nightfall .nav .cta{background:var(--paper);color:var(--ink)}
 
 /* ---------- community ---------- */
 .moat{padding:96px 0 84px;overflow:hidden}
-.crow{display:flex;gap:12px;margin-top:40px;will-change:transform;
- padding-left:max(var(--pad),calc((100vw - 1180px)/2 + var(--pad)));
- transform:translate3d(calc(6% - var(--p) * 18%),0,0)}
+.crow{display:flex;gap:12px;margin-top:40px;overflow-x:auto;overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;scrollbar-width:none;
+ padding-left:max(var(--pad),calc((100vw - 1180px)/2 + var(--pad)));padding-right:var(--pad)}
+.crow::-webkit-scrollbar{display:none}
 .crow figure{flex:0 0 56vw;max-width:240px}
 .crow img{width:100%;aspect-ratio:460/867;object-fit:contain;
  filter:drop-shadow(0 26px 34px rgba(0,0,0,.55))}
@@ -422,6 +423,7 @@ body.nightfall .nav .cta{background:var(--paper);color:var(--ink)}
       p = p < 0 ? 0 : p > 1 ? 1 : p;
       el.style.setProperty('--p', p.toFixed(4));
       if(el.hasAttribute('data-stage')) stage(el, p);
+      if(el === crow) driveCrow(p);
     }
     /* nav state */
     var nav = document.getElementById('nav');
@@ -432,6 +434,16 @@ body.nightfall .nav .cta{background:var(--paper);color:var(--ink)}
     nav.classList.toggle('on-dark', !!(mid && mid.closest && mid.closest('.dark')));
     raf = 0;
   }
+  /* the community row advances with the page, but hands over the moment you swipe it */
+  var crow = document.querySelector('.crow'), crowTaken = false;
+  if(crow){ ['pointerdown','wheel','touchstart'].forEach(function(ev){
+    crow.addEventListener(ev, function(){ crowTaken = true; }, {passive:true}); }); }
+  function driveCrow(p){
+    if(!crow || crowTaken || reduce) return;
+    var max = crow.scrollWidth - crow.clientWidth;
+    if(max > 0) crow.scrollLeft = raw(p, .22, .78) * max;
+  }
+
   var tickEl = document.getElementById('tick');
   function raw(p, from, to){ var v = (p - from) / (to - from);
     return v < 0 ? 0 : v > 1 ? 1 : v; }
